@@ -664,9 +664,9 @@ class EmployeeAdvanceExpense(models.Model):
         return advance_expenses
 
     def write(self, values):
-        if values and 'x_studio_anticipated_account_code' in values.keys() and self.env.user.login not in ('director@isyedu.org','odooadmin@isyedu.org'):
+        if self.state != 'draft' and values and 'x_studio_anticipated_account_code' in values.keys() and self.env.user.login not in ('director@isyedu.org','odooadmin@isyedu.org'):
             raise UserError("You cannot change Anticipated Account Code on this state. Please contact to Administrator.")
-        if values and values.get('advance_expense_line_ids') and len(values['advance_expense_line_ids'][0] or [])>2 \
+        if self.state != 'draft' and values and values.get('advance_expense_line_ids') and len(values['advance_expense_line_ids'][0] or [])>2 \
                 and 'product_id' in values['advance_expense_line_ids'][0][2].keys() and self.env.user.login not in ('director@isyedu.org','odooadmin@isyedu.org'):
             raise UserError("You cannot change Anticipated Account Code on this state. Please contact to Administrator.")
         res = super(EmployeeAdvanceExpense, self).write(values)

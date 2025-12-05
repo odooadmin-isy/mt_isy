@@ -833,7 +833,7 @@ class HrPayslipApprovalGeneration(models.TransientModel):
             else:
                 annual_retirement = obj_contract.x_studio_expatriate_annual_retirement
                 monthly_retirement = obj_contract.x_studio_expatriate_monthly_retirement
-                if obj_contract.sudo().company_id.parent_id: # GTY
+                if obj_contract.sudo().company_id.short_name == 'GTY':
                     contract_type = 'expat40'
                 else:# ISYA
                     contract_type = 'expat60'

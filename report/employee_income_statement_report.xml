@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data>
+
+    <record id="report_employee_income_statement" model="ir.actions.report">
+        <field name="name">Employee Income Statement</field>
+        <field name="model">employee.income.statement</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mt_isy.report_employee_income_statement_view</field>
+        <field name="report_file">mt_isy.report_employee_income_statement</field>
+        <field name="binding_model_id" ref="model_employee_income_statement"/>
+        <field name="binding_type">report</field>
+        <field name="print_report_name">'Employee Income Statement - %s' % (object.employee_id.name)</field>
+    </record>
+
+    <template id="employee_income_statement_layout">
+        <!-- Use web.basic_layout as base -->
+        <t t-call="web.basic_layout">
+            <!-- Header -->
+            <div class="header" style="width:100%; text-align:center; margin-bottom:20px;">
+                <img class="header-image" t-att-src="'/mt_isy/static/src/img/header.png'" style="width:100%;height:100%;"/>
+            </div>
+
+            <!-- Body -->
+            <t t-raw="0"/>
+
+            <div class="footer" style="position:relative; bottom:0; width:100%; text-align:center; margin-top:50px;">
+                <img class="footer-image" t-att-src="'/mt_isy/static/src/img/footer.jpg'" style="width:100%;height:100%;"/>
+            </div>
+        </t>
+    </template>
+
+
+    <template id="report_employee_income_statement_view">
+        <t t-call="web.html_container">
+            <!-- <t t-call="web.external_layout"> -->
+            <t t-call="mt_isy.employee_income_statement_layout">
+                <t t-foreach="docs" t-as="o">
+                    <div class="page" style="font-size:18px; font-family:San-serif;">
+                        <h4 style="text-align: center;">
+                        INCOME STATEMENT <t t-esc="o.date_from.year"/>
+                        </h4><br/><br/>
+                        <span t-esc="datetime.date.today().strftime('%B %d, %Y')"/><br/><br/>
+                        <span>To Whom It May Concern,</span><br/><br/>
+                        <span><p><t t-esc="o.employee_id.address_id.title.shortcut if o.employee_id.address_id.title else ''"/>
+<t t-out="o.employee_id.name"/> works at The International School Yangon Ltd. GTY and The International School Yangon
+                        Association and remains employed at the school. His salary from <span t-esc="o.date_from.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                        to <span t-esc="o.date_to.strftime('%b %d, %Y').replace(' 0', ' ')"/> was:
+                        </p></span><br/>
+
+                        <table style="border:none; width:100%;">
+                            <tr>
+                                <td>The International School of Yangon Association</td>
+                                <td>
+                                    <span t-esc="o.date_from.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                                    to
+                                    <span t-esc="o.date_to.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                                </td>
+                                <td style="text-align: right;">
+                                    <span t-esc="o.isy_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.company_id.currency_id}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>The International School of Yangon Ltd GTY</td>
+                                <td>
+                                    <span t-esc="o.date_from.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                                    to
+                                    <span t-esc="o.date_to.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                                </td>
+                                <td style="text-align: right; border-bottom: 1px solid #000;">
+                                    <span t-esc="o.gty_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.company_id.currency_id}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Gross Total</td>
+                                <td></td>
+                                <td style="text-align: right;">
+                                    <span t-esc="o.gross_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.company_id.currency_id}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Tax Deduction</td>
+                                <td>
+                                    <span t-esc="o.date_from.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                                    to
+                                    <span t-esc="o.date_to.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                                </td>
+                                <td style="text-align: right; border-bottom: 1px solid #000;">
+                                    <span t-esc="o.tax_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.company_id.currency_id}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Net Total</td>
+                                <td></td>
+                                <td style="text-align: right; border-bottom: 1px solid #000;">
+                                    <span t-esc="o.net_amount" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.company_id.currency_id}"/>
+                                </td>
+                            </tr>
+                        </table>
+                        <br/><br/><br/><br/>
+                        <p>Sincerely,</p>
+                        <div class="col-4 pull-right">
+                            <p class="text-left"><img src="/mt_isy/static/src/img/sign.jpg" style="width:180px;height:130px;" /><br/>
+                                <span style="text-align:left;" class="text-left">Steven Linn</span><br/>
+                                <span style="text-align:left;" class="text-left">Business Manager</span><br/>
+                                <span style="text-align:left;" class="text-left">slinn@isyedu.org</span><br/>
+                            </p>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+  </data>
+</odoo>

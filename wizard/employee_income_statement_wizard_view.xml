@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <!--
+            Employee Income Statement Wizard
+    -->
+        <record id="view_isy_employee_income_statement_wizard" model="ir.ui.view">
+            <field name="name">Employee Income Statement Wizard</field>
+            <field name="model">employee.income.statement.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Employee Income Statement Wizard">
+                    <group>
+                        <group>
+                            <field name="name" required="1" placeholder="2026"/>
+                            <field name="date_from" readonly="1" force_save="1"/>
+                            <field name="date_to" readonly="1" force_save="1"/>
+                            <field name="tag_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="generate_income_statement" string="Generate" type="object" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_isy_employee_income_statement_wizard" model="ir.actions.act_window">
+            <field name="name">Employee Income Statement Wizard</field>
+            <field name="res_model">employee.income.statement.wizard</field>
+            <field name="view_id" ref="view_isy_employee_income_statement_wizard"/>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_isy_employee_income_statement_wizard" name="Generate Employee Income Statement" parent="menu_isy_employee_income_statement_root" action="action_isy_employee_income_statement_wizard" sequence="10"/>
+
+    </data>
+</odoo>

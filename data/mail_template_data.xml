@@ -402,7 +402,7 @@ This email is sent monthly for the Community Deposit Balance from Odoo system.
                   </ol>
                 </t>
 
-                <p>c <i>TechSupport</i>.</p>
+                <p><i>TechSupport</i>.</p>
                 
                 <p>Sincerely,<br/>
                 <t t-out="object.create_uid.name"/><br></p>

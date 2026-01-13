@@ -54,8 +54,10 @@
         'views/studio_leave_views.xml',
         'views/studio_employee_views.xml',
         'views/studio_contract_views.xml',
+        'views/employee_income_statement_view.xml',
         'wizard/budget_wizard_view.xml',
         'wizard/payroll_request_report_wizard_view.xml',
+        'wizard/employee_income_statement_wizard_view.xml',
         'data/report_paperformat.xml',
         'data/mail_template_data.xml',
         'data/ir_sequence_data.xml',
@@ -74,6 +76,7 @@
         'report/asset_report_action.xml',
         'report/payslip_cashpack_report.xml',
         'views/hr_payslip_view_form.xml',
+        'report/employee_income_statement_report.xml',
         
     ],
     "external_dependencies": {"python3": ["pyjwt"]},

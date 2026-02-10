@@ -471,7 +471,9 @@ class EmployeeAdvanceExpense(models.Model):
             price_subtotal += subtotal
 
         #check other Reimbursement amount
-        domain = [('product_id.property_account_expense_id','=',account_id.id),('advance_line_id.id','!=',self.id),('advance_line_id.state','in',('draft','confirm','approved_hr_manager','paid')),('advance_line_id.company_id','=',self.company_id.id)]
+        # domain = [('product_id.property_account_expense_id','=',account_id.id),('advance_line_id.id','!=',self.id),('advance_line_id.state','in',('draft','confirm','approved_hr_manager','paid')),('advance_line_id.company_id','=',self.company_id.id)]
+        domain = [('product_id.property_account_expense_id','=',account_id.id),('advance_line_id.id','!=',self.id),('advance_line_id.state','not in',('cancel','reject','cleared')),('advance_line_id.company_id','=',self.company_id.id)]
+
         if self.capex_group_id:
             domain += [('advance_line_id.capex_group_id','=',self.capex_group_id.id)]
         lines = self.env['advance.expense.line'].sudo().search(domain)
@@ -872,7 +874,7 @@ class EmployeeAdvanceExpense(models.Model):
 
     def get_first_approval(self):
         if (self.first_approver_id and self.first_approver_id.id!=self.env.user.id):
-            if self.env.user.login!='odooadmin@isyedu.org':
+            if self.env.user.login not in ('odooadmin@isyedu.org', 'director@isyedu.org'):
                 raise UserError("%s is reviewer for this request. You are not allowed to approve this."%(self.first_approver_id.name))
 
         self.state = 'first_approve'

@@ -255,7 +255,8 @@ class PurchaseOrder(models.Model):
             price_subtotal += subtotal
 
         #check other Reimbursement amount
-        domain = [('product_id.property_account_expense_id','=',account_id.id),('advance_line_id.state','in',('draft','confirm','approved_hr_manager','paid')),('advance_line_id.company_id','=',self.company_id.id)]
+        # domain = [('product_id.property_account_expense_id','=',account_id.id),('advance_line_id.state','in',('draft','confirm','approved_hr_manager','paid')),('advance_line_id.company_id','=',self.company_id.id)]
+        domain = [('product_id.property_account_expense_id','=',account_id.id),('advance_line_id.state','not in',('cancel','reject','cleared')),('advance_line_id.company_id','=',self.company_id.id)]
         if self.capex_group_id:
             domain += [('advance_line_id.capex_group_id','=',self.capex_group_id.id)]
         lines = self.env['advance.expense.line'].sudo().search(domain)
@@ -279,7 +280,7 @@ class PurchaseOrder(models.Model):
             _logger.debug('####################################################### Other Invoice amount')
             _logger.debug('%s, %s, %s'%(line.move_id.id,line.move_id.name,subtotal))
             price_subtotal += subtotal
-        
+
         if account_id.id in account_analytic:
             budget_account_dict[account_id.id].append(price_subtotal)
         else:
@@ -370,7 +371,7 @@ class PurchaseOrder(models.Model):
     def button_first_approve(self):
         for order in self:
             if (order.state == 'to_first_approve' and order.first_approver_id and order.first_approver_id.id!=self.env.user.id):
-                if self.env.user.login!='odooadmin@isyedu.org':
+                if self.env.user.login not in ('odooadmin@isyedu.org', 'director@isyedu.org'):
                     raise UserError("%s is reviewer for this Purchase Order. You are not allowed to approve this."%(self.first_approver_id.name))
 
             order.state = 'to approve'

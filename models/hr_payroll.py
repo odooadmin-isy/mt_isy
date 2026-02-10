@@ -275,11 +275,10 @@ class HrPayslip(models.Model):
 
             #need to check hr payslip process request only allow one record per month
             #to modify again, they need to request Payroll Manger via email to cancel their record for this month request
-            last_day = self.env['ir.config_parameter'].sudo().get_param('mt_isy.last_request_day', 20)
-            previous_last_day = self.env['ir.config_parameter'].sudo().get_param('mt_isy.previous_last_request_day', 20)
-            previous_lastday = ((self.date_from+relativedelta(months=-1)).replace(day=int(previous_last_day)))
-            current_lastday = ((self.date_to).replace(day=int(last_day)))
-            obj_payslip_process = self.env['hr.payslip.process.request'].sudo().search([('state','=','done'), ('request_employee_id', '=', self.employee_id.id),('requested_date','>',str(previous_lastday)+' 23:59:59'),('requested_date','<=',str(current_lastday)+' 23:59:59')])
+            previous_last_request_date = self.env['ir.config_parameter'].sudo().get_param('mt_isy.previous_last_request_date', '2026-01-01')
+            last_request_date = self.env['ir.config_parameter'].sudo().get_param('mt_isy.last_request_date', '2026-01-01')
+
+            obj_payslip_process = self.env['hr.payslip.process.request'].sudo().search([('state','=','done'), ('request_employee_id', '=', self.employee_id.id),('requested_date','>',str(previous_last_request_date)+' 23:59:59'),('requested_date','<=',str(last_request_date)+' 23:59:59')])
             for obj_pp in obj_payslip_process:
                 total_school_trip += obj_pp.total_school_trip_adjustment
                 total_tuition_fee += obj_pp.total_tuition_fee_adjustment
@@ -1530,11 +1529,6 @@ class HrPayslipProcessRequest(models.Model):
             rec.is_expat = is_expat
 
     def cancel_approve(self):
-        #comment below validation because there has no more needed for cancel action when the state is done.
-        #when state is done, it can able to reset draft.
-        #cancel is the process end.
-        # if self.state == 'done' and not self.env.user.has_group('hr_payroll.group_hr_payroll_manager'):
-        #     raise ValidationError(_("Please ask Business Manager to cancel your record as your request is already approved.\n Cancellation after approved will be effect only for adjustment details and it cannot reverse for cash allocation request as it is already update in your cash allocation information.\n You can create new requests and fill cash allocation again or adjustment details or both. \n Then, it will update your cash allocation again."))
         for rec in self:
             rec.is_after_lastday = False
             rec.msg_validation = False
@@ -1542,13 +1536,9 @@ class HrPayslipProcessRequest(models.Model):
     
     def check_allocation_request(self):
         for rec in self:
-
-            # total_allocation_request_gty = sum(rec.cash_allocation_requests.filtered(lambda x: x.name not in ('401_k','overseas_bank')).mapped('amount'))
-            # total_allocation_request_isya = sum(rec.cash_allocation_requests.filtered(lambda x: x.name in ('401_k','overseas_bank')).mapped('amount'))
             total_allocation_request_isya = sum(rec.cash_allocation_requests.mapped('amount'))
             total_deduction_request = sum(rec.deduction_details.mapped('amount'))
-            # if (rec.monthly_salary_gty+rec.retirement_salary_gty) < total_allocation_request_gty:
-            #     raise UserError("Your combined allocations (1+2+3+4) cannot be more than your GTY salary (40%).")
+
             expat_salary = float_round(rec.monthly_salary_isya,2)+float_round(rec.retirement_salary_isya,2)
             if expat_salary < float_round(rec.monthly_salary_isya+rec.retirement_salary_isya,2):
                 expat_salary = float_round(rec.monthly_salary_isya+rec.retirement_salary_isya,2)
@@ -1556,35 +1546,6 @@ class HrPayslipProcessRequest(models.Model):
                 raise UserError("Your allocations and deductions cannot be more than your ISYA salary (60%).")
             elif not rec.is_expat and (rec.monthly_salary_gty) < (total_allocation_request_isya+total_deduction_request):
                 raise UserError("Your allocations and deductions cannot be more than your monthly salary.")
-
-
-            # if monthly_salary < (total_allocation_request+total_deduction_request):
-            #     raise UserError("Your allocation (deduction) is more than your salary (60%) so please contact slinn@isyedu.org.")
-
-    # def get_contract(self):
-    #     for rec in self:
-    #         if 'Local' not in rec.request_employee_id.sudo().category_ids.sudo().mapped('name'): # Expat - ISYA 
-    #             obj_contract_isya = rec.env['hr.contract'].sudo().search(
-    #                 [('company_id.parent_id','=',False),('employee_id', '=', rec.request_employee_id.id), ('state', 'in', ['open', 'pending'])])
-    #             obj_contract_gty = rec.env['hr.contract'].sudo().search(
-    #                 [('company_id.parent_id','!=',False),('employee_id', '=', rec.request_employee_id.id), ('state', 'in', ['open', 'pending'])])
-    #             if not obj_contract_isya:
-    #                 raise ValidationError(_("There has no open/renew contract of ISYA for this requested employee."))
-    #             if not obj_contract_gty:
-    #                 raise ValidationError(_("There has no open/renew contract of GTY for this requested employee."))
-    #             obj_contracts = {'gty':obj_contract_gty, 'isya':obj_contract_isya}
-    #         else: # Local
-    #             obj_contract_gty = rec.env['hr.contract'].sudo().search(
-    #                 [('company_id.parent_id','!=',False),('employee_id', '=', rec.request_employee_id.id), ('state', 'in', ['open', 'pending'])])
-    #             obj_contract_isya = rec.env['hr.contract']
-    #             if not obj_contract_gty:
-    #                 raise ValidationError(_("There has no open/renew contract for this requested employee."))
-    #             obj_contracts = {'gty':obj_contract_gty, 'isya':obj_contract_isya}
-    #         if len(obj_contract_isya) > 1 or len(obj_contract_gty) > 1:
-    #             raise UserError(_("Please check contracts because there has more than one opening/renew contract."))
-            
-    #         return obj_contracts
-
 
     def get_contract(self):
         for rec in self:
@@ -1651,7 +1612,8 @@ class HrPayslipProcessRequest(models.Model):
                     _("You are not allowed to approve this!"))
 
     def cron_process_approved(self):
-        records = self.search([('state','=','done'),('is_after_lastday','=',True)])
+        last_request_date = self.env['ir.config_parameter'].sudo().get_param('mt_isy.last_request_date', '2026-01-01')
+        records = self.sudo().search([('state','=','done'), ('is_after_lastday','=',True), ('requested_date','<',str(last_request_date)+' 23:59:59')])
         records._process_approved_toupdate()
 
     def _process_approved_toupdate(self):
@@ -1746,29 +1708,20 @@ class HrPayslipProcessRequest(models.Model):
             self.env['hr.employee.bank.report'].create(val_list)
             rec.update({'is_after_lastday':False,'msg_validation':False})
 
+    def _set_is_after_lastday(self):
+        previous_last_request_date = self.env['ir.config_parameter'].sudo().get_param('mt_isy.previous_last_request_date', '2026-01-01')
+        last_request_date = self.env['ir.config_parameter'].sudo().get_param('mt_isy.last_request_date', '2026-01-01')
+        if datetime.now(timezone('Asia/Rangoon')).date() > datetime.strptime(last_request_date, '%Y-%m-%d').date():
+            self.is_after_lastday = True
+            self.msg_validation = "This request will be reflected in the next month's payroll."
+        else:
+            self.is_after_lastday = False
+            self.msg_validation = False
+
     def reset_draft(self):
         for rec in self:
             rec.requested_date = datetime.now()
-            first_day = self.env['ir.config_parameter'].sudo().get_param('mt_isy.first_request_day', 1)
-            first_request_date = fields.Date().today().replace(day=int(first_day))
-            last_day = self.env['ir.config_parameter'].sudo().get_param('mt_isy.last_request_day', 20)
-            last_request_date = fields.Date().today().replace(day=int(last_day))
-
-            # deadline for Local
-            is_expat = False if 'Local' in [
-                    x.name for x in rec.request_employee_id.sudo().category_ids.sudo()] else True
-            if not is_expat:
-                first_request_date = fields.Date().today().replace(day=1)
-                last_request_date = fields.Date().today().replace(day=10)
-
-            if rec.requested_date.date() >= first_request_date and rec.requested_date.date() <= last_request_date:
-                rec.is_after_lastday = False
-                rec.msg_validation = False
-            else:
-                rec.is_after_lastday = True
-                rec.msg_validation = "This request will be reflected in the next month's payroll."
-                # raise ValidationError(
-                #     _("You cannot make changes to this record between " + str(first_day) + " and " + str(last_day) + " of the month."))           
+            rec._set_is_after_lastday()
             rec.state = 'draft'
 
     def write(self, values):
@@ -1786,35 +1739,11 @@ class HrPayslipProcessRequest(models.Model):
         vals['state'] = 'waitingforapproval'
         if not vals['request_employee_id']:
             raise ValidationError(_("Please contact to odoo admin as your account is not link with employee informatin yet. \n Please click 'Discard' button."))
-        first_day = self.env['ir.config_parameter'].sudo().get_param('mt_isy.first_request_day', 1)
-        first_request_date = fields.Date().today().replace(day=int(first_day))
-        last_day = self.env['ir.config_parameter'].sudo().get_param('mt_isy.last_request_day', 20)
-        last_request_date = fields.Date().today().replace(day=int(last_day))
 
-        # deadline for Local
-        is_expat = False if 'Local' in [
-                x.name for x in self.env['hr.employee'].sudo().browse((vals.get('request_employee_id') or False)).sudo().category_ids.sudo()] else True
-        if not is_expat:
-            first_request_date = fields.Date().today().replace(day=1)
-            last_request_date = fields.Date().today().replace(day=10)
-
-        # obj_payslip_process = self.env['hr.payslip.process.request'].search([('state', '=', 'done'), ('request_employee_id', '=', vals['request_employee_id']), (
-        #     'create_date', '>', str(first_request_date)+' 00:00:01'), ('create_date', '<', str(last_request_date)+' 23:59:59')])
-        # if obj_payslip_process:
-        #     raise ValidationError(_("Please find your record for this month and modify on this by clicking 'Reset to Draft'."))
-        
-        if datetime.now(timezone('Asia/Rangoon')).date() >= first_request_date and datetime.now(timezone('Asia/Rangoon')).date() <= last_request_date:
-            result = super(HrPayslipProcessRequest, self).create(vals)
-            result.check_allocation_request()
-            return result
-        else:
-            is_after_lastday = True
-            msg_validation = "This request will be reflected in the next month's payroll."
-            # raise ValidationError(_("Please make your request days between " + str(first_day) + " and " + str(last_day) + " of the month."))
-            vals.update({'is_after_lastday':is_after_lastday, 'msg_validation':msg_validation})
-            result = super(HrPayslipProcessRequest, self).create(vals)
-            result.check_allocation_request()
-            return result
+        result = super(HrPayslipProcessRequest, self).create(vals)
+        result.check_allocation_request()
+        result._set_is_after_lastday()
+        return result
 
     def to_bool(self, value):
         if value:

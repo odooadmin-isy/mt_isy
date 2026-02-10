@@ -65,7 +65,7 @@
                         <span>To Whom It May Concern,</span><br/><br/>
                         <span><p><t t-esc="o.employee_id.address_id.title.shortcut if o.employee_id.address_id.title else ''"/>
 <t t-out="o.employee_id.name"/> works at The International School Yangon Ltd. GTY and The International School Yangon
-                        Association and remains employed at the school. His salary from <span t-esc="o.date_from.strftime('%b %d, %Y').replace(' 0', ' ')"/>
+                        Association and remains employed at the school. His/Her salary from <span t-esc="o.date_from.strftime('%b %d, %Y').replace(' 0', ' ')"/>
                         to <span t-esc="o.date_to.strftime('%b %d, %Y').replace(' 0', ' ')"/> was:
                         </p></span><br/>
 

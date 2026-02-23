@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Search View -->
+    <record id="view_stock_by_assigned_person_search" model="ir.ui.view">
+        <field name="name">stock.by.assigned.person.search</field>
+        <field name="model">stock.by.assigned.person</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="assigned_to"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Tree View (List of Persons) -->
+    <record id="view_stock_by_assigned_person_tree" model="ir.ui.view">
+        <field name="name">stock.by.assigned.person.tree</field>
+        <field name="model">stock.by.assigned.person</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="assigned_to"/>
+                <field name="manager_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View (Person with Products) -->
+    <record id="view_stock_by_assigned_person_form" model="ir.ui.view">
+        <field name="name">stock.by.assigned.person.form</field>
+        <field name="model">stock.by.assigned.person</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="assigned_to" readonly="1"/>
+                        <field name="manager_id" readonly="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Assigned Products">
+                            <field name="line_ids" nolabel="1">
+                                <tree>
+                                    <field name="product_id"/>
+                                    <field name="serial_number"/>
+                                    <field name="product_category"/>
+                                    <field name="assigned_department"/>
+                                    <field name="location_id"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_stock_by_assigned_person" model="ir.actions.act_window">
+        <field name="name">Stock by Assigned Person</field>
+        <field name="res_model">stock.by.assigned.person</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_stock_by_assigned_person_search"/>
+    </record>
+
+    <!-- Menu (adjust parent as needed) -->
+    <menuitem
+        id="menu_stock_assigned_person"
+        name="Stock by Assigned Person"
+        parent="stock.menu_stock_root"
+        action="action_stock_by_assigned_person"
+        sequence="50"
+    />
+
+</odoo>

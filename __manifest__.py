@@ -55,6 +55,7 @@
         'views/studio_employee_views.xml',
         'views/studio_contract_views.xml',
         'views/employee_income_statement_view.xml',
+        'views/stock_by_assigned_person_view.xml',
         'wizard/budget_wizard_view.xml',
         'wizard/payroll_request_report_wizard_view.xml',
         'wizard/employee_income_statement_wizard_view.xml',

@@ -188,6 +188,10 @@ class PurchaseOrder(models.Model):
                     self.x_studio_approver = bm_id
                     self.checker_id = False
 
+            if self.x_studio_approver.id == bm_id:
+                self.first_checker_id = False
+                self.checker_id = False
+
             if not self.check_two_step_check():
                 self.first_checker_id = False
             if not self.check_two_step_approver() or (self.check_special_accounts() and not self.check_coo_approve_special_account()): #Special case for PD, Chinthe Fund & Sustainable

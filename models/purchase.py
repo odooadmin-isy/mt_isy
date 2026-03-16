@@ -363,7 +363,8 @@ class PurchaseOrder(models.Model):
 
             if order.first_approver_id:
                 #If amount is less than allowed amount, then go to final approver to COO
-                order.coo_final_approver = order.check_coo_final_approver()
+                # order.coo_final_approver = order.check_coo_final_approver()
+                order.coo_final_approver = False if order.check_special_accounts() else order.check_coo_final_approver()
                 order.state = 'to_first_approve' if not order.coo_final_approver else 'to approve'
             else:
                 order.state = 'to approve'
@@ -396,8 +397,12 @@ class PurchaseOrder(models.Model):
             else:
                 if self.first_checker_id:
                     order.state = 'to_first_check'
-                else:
+                elif self.checker_id:
                     order.state = 'to_check'
+                else:
+                    # order.coo_final_approver = order.check_coo_final_approver()
+                    order.coo_final_approver = False if order.check_special_accounts() else order.check_coo_final_approver()
+                    order.state = 'to_first_approve' if not order.coo_final_approver else 'to approve'
 
     def _prepare_invoice(self):
         """Prepare the dict of values to create the new invoice for a purchase order.

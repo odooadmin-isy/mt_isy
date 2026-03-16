@@ -427,19 +427,21 @@ class EmployeeAdvanceExpense(models.Model):
 
     def get_apprv_hr_manager(self):
         director_id = int(self.env['ir.config_parameter'].sudo().get_param('isy.director', 191))
-        if self.env.user.id != director_id and not self.env.user.has_group('base.group_system') and ((self.coo_final_approver and self.env.user.id != self.first_approver_id.id) or not self.coo_final_approver):
+        if self.env.user.id != director_id and not self.env.user.has_group('base.group_system') and\
+            ((self.coo_final_approver and self.env.user.id != self.first_approver_id.id) or not self.coo_final_approver):
             raise UserError(_('You do not have permission to approve this request.'))
 
         self.state = 'approved_hr_manager'
         self.hr_validate_date = time.strftime('%Y-%m-%d')
         self.hr_manager_by_id = self.env.user.id
+        self._generate_name()
 
     def budget_account_dict(self, account_id, price_subtotal, budget_account_dict, account_analytic,product_id=False,date_from=False,date_to=False):
         if self.currency_id and self.company_id and self.currency_id != self.company_id.currency_id:
             currency_id = self.currency_id
             rate = currency_id.with_context(date=self.request_date)
             price_subtotal = currency_id._convert(price_subtotal, self.company_id.currency_id, self.company_id, self.request_date or fields.Date.today())
-        
+
         #check other PO amount
         domain = [('product_id.property_account_expense_id','=',account_id.id),('order_id.state','!=','cancel'),('order_id.invoice_count','=',0),('company_id','=',self.company_id.id)]
         if self.capex_group_id:
@@ -586,7 +588,7 @@ class EmployeeAdvanceExpense(models.Model):
     #Check if the amount is less than the allowed amount only need first approve
     def check_coo_final_approver(self):
         amount_check = float(self.env['ir.config_parameter'].sudo().get_param(
-            'isy.po_amount_check', 0.00))
+            'isy.adv_reim_amount_check', 0.00))
         if amount_check > 0:
             converted_amount = self.currency_id._convert(self.total_amount_expense, self.company_id.currency_id, self.company_id, self.request_date or fields.Date.today())
             if converted_amount < amount_check:
@@ -631,6 +633,10 @@ class EmployeeAdvanceExpense(models.Model):
                     self.x_studio_field_b6lRX = bm_id
                     self.checker_id = False
 
+            if self.x_studio_to_approve.id == bm_id:
+                self.first_checker_id = False
+                self.checker_id = False
+
             if not self.check_two_step_check():
                 self.first_checker_id = False
             if not self.check_two_step_approver() or (self.check_special_accounts() and not self.check_coo_approve_special_account()): #Special case for PD, Chinthe Fund & Sustainable
@@ -642,12 +648,6 @@ class EmployeeAdvanceExpense(models.Model):
         gty_comp = self.env['res.company'].sudo().search([('name','ilike','GTY')])
         if len(self.env.companies)>1 or self.env.companies[0].id!=gty_comp.id:
             raise UserError(_("Please change your current company to '"+(gty_comp.name or '')+"'"))
-
-        avoid_rules_accounts = self.env['ir.config_parameter'].sudo().get_param(
-            'mt_isy.avoid_rules_accounts', [])
-        avoid_rules_accounts_social_event = self.env['ir.config_parameter'].sudo().get_param(
-            'mt_isy.avoid_rules_accounts_social_event', [])
-        avoid_rules_accounts_social_event = avoid_rules_accounts_social_event.split(",")
 
         director_id = int(self.env['ir.config_parameter'].sudo().get_param('isy.director', 191))
         bm_id = int(self.env['ir.config_parameter'].sudo().get_param('isy.bm', 178))
@@ -681,6 +681,13 @@ class EmployeeAdvanceExpense(models.Model):
             if 'advance_expense_line_ids' in values:  
                     rec.accouting_budget_warning(rec, rec.advance_expense_line_ids, warning_msg, budget_account_dict, account_analytic, update=True)
         return res
+
+    def _generate_name(self):
+        if self.name == 'New' or self.name == False:
+            if self.adv_exp_type == 'advance':
+                self.name = self.env['ir.sequence'].next_by_code('employee.advance.expense')
+            else:
+                self.name = self.env['ir.sequence'].next_by_code('employee.advance.expense.reimbursement')
 
     @api.constrains('advance_expense_line_ids')
     def check_lines_count(self):
@@ -728,6 +735,7 @@ class EmployeeAdvanceExpense(models.Model):
         }
 
     def get_done(self):
+        self._generate_name()
         if self.adv_exp_type == 'advance':
             if (self.env.user.has_group('account.group_business_manager')):
                 if self.journal_id.type == 'cash':
@@ -855,6 +863,7 @@ class EmployeeAdvanceExpense(models.Model):
                     })
 
     def get_first_check(self):
+        self._generate_name()
         if (self.first_checker_id and self.first_checker_id.id!=self.env.user.id):
             if self.env.user.login!='odooadmin@isyedu.org':
                 raise UserError("%s is reviewer for this request. You are not allowed to check this."%(self.first_checker_id.name))
@@ -862,6 +871,7 @@ class EmployeeAdvanceExpense(models.Model):
         self.state = 'first_check'
 
     def get_check(self):
+        self._generate_name()
         if (self.checker_id and self.checker_id.id!=self.env.user.id):
             if self.env.user.login!='odooadmin@isyedu.org':
                 raise UserError("%s is reviewer for this request. You are not allowed to check this."%(self.checker_id.name))
@@ -869,10 +879,8 @@ class EmployeeAdvanceExpense(models.Model):
         self.state = 'check'
         self.checked_date = time.strftime('%Y-%m-%d')
 
-        #If amount is less than allowed amount, then go to final approver to COO
-        self.coo_final_approver = self.check_coo_final_approver()
-
     def get_first_approval(self):
+        self._generate_name()
         if (self.first_approver_id and self.first_approver_id.id!=self.env.user.id):
             if self.env.user.login not in ('odooadmin@isyedu.org', 'director@isyedu.org'):
                 raise UserError("%s is reviewer for this request. You are not allowed to approve this."%(self.first_approver_id.name))
@@ -880,6 +888,8 @@ class EmployeeAdvanceExpense(models.Model):
         self.state = 'first_approve'
 
     def get_confirm(self):
+        _logger.info("Confirming advance expense.....")
+        _logger.info(f"Expense Type: {self.adv_exp_type}")
         if not self.advance_expense_line_ids:
             raise UserError(_('Please add some advance expense lines.'))
         else:
@@ -896,19 +906,20 @@ class EmployeeAdvanceExpense(models.Model):
                 raise ValidationError(_("Reimbursement only allow to add one record for Advance Expense Lines."))
             total_amount = self.total_amount_expense
 
-            if self.adv_exp_type == 'advance':
-                self.name = self.env['ir.sequence'].next_by_code('employee.advance.expense')
-            else:
-                self.name = self.env['ir.sequence'].next_by_code('employee.advance.expense.reimbursement')
+            _logger.info(f"Advance/Reimbursement Number: {self.name}")
 
             if self.currency_id and self.company_id and self.currency_id != self.company_id.currency_id:
                 currency_id = self.currency_id
                 rate = currency_id.with_context(date=self.request_date)
                 total_amount = currency_id._convert(self.total_amount_expense, self.company_id.currency_id, self.company_id, self.request_date or fields.Date.today())
 
+            #If amount is less than allowed amount, then go to final approver to COO
+            self.coo_final_approver = False if self.check_special_accounts() else self.check_coo_final_approver()
+
             self.state = 'confirm'
             self.confirm_date = time.strftime('%Y-%m-%d')
             self.confirm_by_id = self.env.user.id
+            self._generate_name()
 
     # Done State key is 'paid'.
     # override reverse process with get_done and action_sheet_move_advance

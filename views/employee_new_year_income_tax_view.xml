@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <!--
+            Employee New Year Income Tax
+    -->
+        <record id="view_isy_employee_new_year_income_tax_tree" model="ir.ui.view">
+            <field name="name">Employee New Year Income Tax</field>
+            <field name="model">employee.new.year.income.tax</field>
+            <field name="arch" type="xml">
+                <tree string="Employee New Year Income Tax">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="school_year_monthly_gross_amount" string="Gross Amount" widget="monetary"/>
+                    <field name="school_year_monthly_average_tax_amount" string="School Year Average Tax" widget="monetary"/>
+                    <field name="financial_year_monthly_average_tax_amount" string="Financial Year Average Tax" widget="monetary"/>
+                    <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'check'"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_employee_new_year_income_tax_search" model="ir.ui.view">
+            <field name="name">employee.new.year.income.tax.search</field>
+            <field name="model">employee.new.year.income.tax</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="employee_tag_ids" string="Tags"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Name" name="group_by_name" context="{'group_by': 'name'}"/>
+                        <filter string="Tags" name="group_by_tags" context="{'group_by': 'employee_tag_ids'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_isy_employee_new_year_income_tax_form" model="ir.ui.view">
+            <field name="name">Employee New Year Income Tax</field>
+            <field name="model">employee.new.year.income.tax</field>
+            <field name="arch" type="xml">
+                <form string="Employee New Year Income Tax" create="false">
+                    <header>
+                        <button name="btn_check" string="Check" type="object"
+                                class="oe_highlight"
+                                invisible="state != 'draft'"/>
+                        <button name="btn_draft" string="Draft" type="object"
+                                class="oe_highlight"
+                                invisible="state != 'check'"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,check"/>
+                    </header>
+
+                    <sheet>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="employee_tag_ids" widget="many2many_tags"/>
+                            <field name="increase_percentage"/>
+                        </group>
+                        <notebook>
+                            <page string="School Year">
+                                <group>
+                                    <field name="school_year_date_from" string="Date From"/>
+                                    <field name="school_year_date_to" string="Date To"/>
+                                </group>
+                                <group>
+                                    <group string="Gross Salary">
+                                        <field name="school_year_monthly_gross_amount" widget="monetary" string="Monthly Salary"/>
+                                        <field name="school_year_yearly_gross_amount" widget="monetary" string="Yearly Salary"/>
+                                    </group>
+                                    <group string="Average Tax">
+                                        <field name="school_year_monthly_average_tax_amount" widget="monetary" string="Monthly Tax"/>
+                                        <field name="school_year_yearly_average_tax_amount" widget="monetary" string="Yearly Tax"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Financial Year">
+                                <group>
+                                    <field name="financial_year_date_from" string="Date From"/>
+                                    <field name="financial_year_date_to" string="Date To"/>
+                                </group>
+                                <group string="Average Tax">
+                                    <field name="financial_year_monthly_average_tax_amount" widget="monetary" string="Monthly Tax"/>
+                                    <field name="financial_year_yearly_average_tax_amount" widget="monetary" string="Yearly Tax"/>
+                                </group>
+                                <group string="Tax Difference">
+                                    <field name="tax_difference_amount" widget="monetary" string="Tax Difference"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" />
+                        <field name="message_ids" widget="mail_thread" />
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_isy_employee_new_year_income_tax" model="ir.actions.act_window">
+            <field name="name">Employee New Year Income Tax</field>
+            <field name="res_model">employee.new.year.income.tax</field>
+            <field name="view_id" ref="view_isy_employee_new_year_income_tax_tree"/>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_employee_new_year_income_tax_search"/>
+        </record>
+
+        <menuitem 
+            id="menu_isy_employee_new_year_income_tax"
+            name="Employee New Year Income Tax"
+            parent="menu_isy_employee_new_year_income_tax_root"
+            action="action_isy_employee_new_year_income_tax" sequence="11"
+        />
+
+    </data>
+</odoo>

@@ -102,6 +102,12 @@
         sequence='4'
     />
 
+    <menuitem id="menu_isy_employee_new_year_income_tax_root"
+        name="Employee New Year Income Tax"
+        parent="hr_work_entry_contract_enterprise.menu_hr_payroll_root"
+        sequence='5'
+    />
+
     <function name="write" model="ir.model.data">
         <function name="search" model="ir.model.data">
             <value eval="[('module', '=', 'account'), ('name', '=', 'menu_action_move_journal_line_form')]"/>

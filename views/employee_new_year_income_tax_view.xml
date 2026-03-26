@@ -12,8 +12,9 @@
                     <field name="name"/>
                     <field name="employee_id"/>
                     <field name="school_year_monthly_gross_amount" string="Gross Amount" widget="monetary"/>
-                    <field name="school_year_monthly_average_tax_amount" string="School Year Average Tax" widget="monetary"/>
+                    <field name="school_year_monthly_net_amount" string="School Year Net Amount" widget="monetary"/>
                     <field name="financial_year_monthly_average_tax_amount" string="Financial Year Average Tax" widget="monetary"/>
+                    <field name="tax_difference_amount" string="Tax Difference Amount" widget="monetary"/>
                     <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'check'"/>
                 </tree>
             </field>
@@ -67,12 +68,12 @@
                                 </group>
                                 <group>
                                     <group string="Gross Salary">
-                                        <field name="school_year_monthly_gross_amount" widget="monetary" string="Monthly Salary"/>
-                                        <field name="school_year_yearly_gross_amount" widget="monetary" string="Yearly Salary"/>
+                                        <field name="school_year_monthly_gross_amount" widget="monetary" string="Monthly"/>
+                                        <field name="school_year_yearly_gross_amount" widget="monetary" string="Yearly"/>
                                     </group>
-                                    <group string="Average Tax">
-                                        <field name="school_year_monthly_average_tax_amount" widget="monetary" string="Monthly Tax"/>
-                                        <field name="school_year_yearly_average_tax_amount" widget="monetary" string="Yearly Tax"/>
+                                    <group string="Net Salary">
+                                        <field name="school_year_monthly_net_amount" widget="monetary" string="Monthly"/>
+                                        <field name="school_year_yearly_net_amount" widget="monetary" string="Yearly"/>
                                     </group>
                                 </group>
                             </page>
@@ -82,8 +83,8 @@
                                     <field name="financial_year_date_to" string="Date To"/>
                                 </group>
                                 <group string="Average Tax">
-                                    <field name="financial_year_monthly_average_tax_amount" widget="monetary" string="Monthly Tax"/>
-                                    <field name="financial_year_yearly_average_tax_amount" widget="monetary" string="Yearly Tax"/>
+                                    <field name="financial_year_monthly_average_tax_amount" widget="monetary" string="Monthly"/>
+                                    <field name="financial_year_yearly_average_tax_amount" widget="monetary" string="Yearly"/>
                                 </group>
                                 <group string="Tax Difference">
                                     <field name="tax_difference_amount" widget="monetary" string="Tax Difference"/>

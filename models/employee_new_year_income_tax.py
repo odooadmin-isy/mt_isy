@@ -28,8 +28,8 @@ class EmployeeNewYearIncomeTax(models.Model):
             string='School Year Yearly Gross Amount',
             compute='_compute_school_year_yearly_amount', 
             track_visibility="onchange")
-    school_year_monthly_average_tax_amount = fields.Float(string='School Year Monthly Average Tax Amount', required=True, track_visibility="onchange")
-    school_year_yearly_average_tax_amount = fields.Float(
+    school_year_monthly_net_amount = fields.Float(string='School Year Monthly Net Amount', required=True, track_visibility="onchange")
+    school_year_yearly_net_amount = fields.Float(
             string='School Year Yearly Average Tax Amount',
             compute='_compute_school_year_yearly_amount', 
             track_visibility="onchange")
@@ -55,12 +55,12 @@ class EmployeeNewYearIncomeTax(models.Model):
             return 0
         return (date_to.year - date_from.year) * 12 + (date_to.month - date_from.month) + 1
 
-    @api.depends('school_year_monthly_gross_amount', 'school_year_monthly_average_tax_amount')
+    @api.depends('school_year_monthly_gross_amount', 'school_year_monthly_net_amount')
     def _compute_school_year_yearly_amount(self):
         for rec in self:
             tl_month = rec.get_months(rec.school_year_date_from, rec.school_year_date_to)
             rec.school_year_yearly_gross_amount = rec.school_year_monthly_gross_amount * tl_month
-            rec.school_year_yearly_average_tax_amount = rec.school_year_monthly_average_tax_amount * tl_month
+            rec.school_year_yearly_net_amount = rec.school_year_monthly_net_amount * tl_month
 
     @api.depends('financial_year_monthly_average_tax_amount')
     def _compute_financial_year_yearly_tax_amount(self):

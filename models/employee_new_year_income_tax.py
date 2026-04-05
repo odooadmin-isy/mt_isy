@@ -13,7 +13,7 @@ class EmployeeNewYearIncomeTax(models.Model):
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
     employee_tag_ids = fields.Many2many(
             'hr.employee.category',
-            'employee_income_statement_employee_category_rel',
+            'employee_new_year_income_tax_employee_category_rel',
             'employee_id',
             'category_id',
             related='employee_id.category_ids',

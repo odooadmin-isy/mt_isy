@@ -831,6 +831,7 @@ class HrLeaveType(models.Model):
         ('hr', 'By Time Off Officer'),
         ('manager', "By Employee's Approver"),
         ('both', "Supervisor and Director")], default='both', string='Approval')
+    order = fields.Integer(string='Order')
 
     def get_fiscal_date(self):
         fd = self.env.user.company_id.fiscalyear_last_day
@@ -893,6 +894,32 @@ class HrLeaveType(models.Model):
                 }
             res.append((record.id, name))
         return res
+
+    @api.model
+    def _model_sorting_key(self, leave_type):
+        remaining = leave_type.virtual_remaining_leaves > 0
+        taken = leave_type.leaves_taken > 0
+
+        return (
+            leave_type.order,  # ascending priority (smallest first)
+            # -1 * leave_type.sequence,
+            leave_type.employee_requests == 'no' and remaining,
+            leave_type.employee_requests == 'yes' and remaining,
+            taken
+        )
+
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None, access_rights_uid=None):
+        employee = self.env['hr.employee']._get_contextual_employee()
+        if order == self._order and employee:
+            # retrieve all leaves, sort them, then apply offset and limit
+            leaves = self.browse(super()._search(domain, access_rights_uid=access_rights_uid))
+            # leaves = leaves.sorted(key=self._model_sorting_key, reverse=True)
+            leaves = leaves.sorted(key=self._model_sorting_key)
+            leaves = leaves[offset:(offset + limit) if limit else None]
+            return leaves._as_query()
+        order = 'order asc'
+        return super()._search(domain, offset, limit, order, access_rights_uid)
 
 class HrLeave(models.Model):
     _inherit = 'hr.leave'

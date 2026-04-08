@@ -142,5 +142,16 @@
             </field>
         </record>
 
+        <record id="edit_holiday_status_form_mt_isy" model="ir.ui.view">
+            <field name="name">edit_holiday_status_form</field>
+            <field name="model">hr.leave.type</field>
+            <field name="inherit_id" ref="hr_holidays.edit_holiday_status_form"/>
+            <field name="arch" type="xml">
+                <field name="leave_validation_type" position='after'>
+                    <field name="order" string="Order"/>
+                </field>
+            </field>
+        </record>
+
     </data>
 </odoo>

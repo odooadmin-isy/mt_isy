@@ -373,10 +373,13 @@ class PurchaseOrder(models.Model):
             else:
                 order.state = 'to approve'
 
+    def _get_director_mail(self):
+        return self.env['ir.config_parameter'].sudo().get_param('isy.director_email', 'director@isyedu.org')
+
     def button_first_approve(self):
         for order in self:
             if (order.state == 'to_first_approve' and order.first_approver_id and order.first_approver_id.id!=self.env.user.id):
-                if self.env.user.login not in ('odooadmin@isyedu.org', 'director@isyedu.org'):
+                if self.env.user.login not in ('odooadmin@isyedu.org', self._get_director_mail()):
                     raise UserError("%s is reviewer for this Purchase Order. You are not allowed to approve this."%(self.first_approver_id.name))
 
             order.state = 'to approve'

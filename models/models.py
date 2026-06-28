@@ -156,12 +156,15 @@ class HolidaysRequest(models.Model):
         else:
             self.leave_balance = self.holiday_status_id.virtual_remaining_leaves
 
+    def _get_director_mail(self):
+        return self.env['ir.config_parameter'].sudo().get_param('isy.director_email', 'director@isyedu.org')
+
     @api.model
     def create(self, values):
         """ Override to avoid automatic logging of creation """
         obj_leave_type = self.env['hr.leave.type'].search([('id', '=', values.get('holiday_status_id'))])
         obj_employee = self.env['hr.employee'].sudo().search([('id','=', values.get('employee_id'))])
-        if obj_employee.user_id.login!='director@isyedu.org' and not obj_employee.parent_id:
+        if obj_employee.user_id.login!= self._get_director_mail() and not obj_employee.parent_id:
             raise UserError("%s doesn't have Supervisor in the system. Please contact to Ei Pan Phyu<ephyu@isyedu.org>."%(obj_employee.name))
 
         if obj_leave_type.accumulated_leave:
@@ -268,12 +271,12 @@ class HolidaysRequest(models.Model):
         return {employee.id: remaining_leave}
 
     def action_approve(self):
-        if self.employee_id.id and self.x_studio_approver_2 and self.x_studio_approver_2.user_id.id != self.env.user.id and self.env.user.login not in ('director@isyedu.org','odooadmin@isyedu.org'):
+        if self.employee_id.id and self.x_studio_approver_2 and self.x_studio_approver_2.user_id.id != self.env.user.id and self.env.user.login not in (self._get_director_mail(),'odooadmin@isyedu.org'):
             raise UserError("You are not allowed to approve. %s is approver for this request."%(self.x_studio_approver_2.name))
         return super(HolidaysRequest, self).action_approve()
 
     def action_validate(self):
-        if self.employee_id.id and self.env.user.login not in ('director@isyedu.org','odooadmin@isyedu.org'):
+        if self.employee_id.id and self.env.user.login not in (self._get_director_mail(),'odooadmin@isyedu.org'):
             raise UserError("You are not allowed to approve it. Director is the second approver.")
         return super(HolidaysRequest, self).action_validate()
 
@@ -665,11 +668,14 @@ class EmployeeAdvanceExpense(models.Model):
         self.accouting_budget_warning(advance_expenses, advance_expenses.advance_expense_line_ids, warning_msg, budget_account_dict, account_analytic, update=False)
         return advance_expenses
 
+    def _get_director_mail(self):
+        return self.env['ir.config_parameter'].sudo().get_param('isy.director_email', 'director@isyedu.org')
+
     def write(self, values):
-        if self.state != 'draft' and values and 'x_studio_anticipated_account_code' in values.keys() and self.env.user.login not in ('director@isyedu.org','odooadmin@isyedu.org'):
+        if self.state != 'draft' and values and 'x_studio_anticipated_account_code' in values.keys() and self.env.user.login not in (self._get_director_mail(),'odooadmin@isyedu.org'):
             raise UserError("You cannot change Anticipated Account Code on this state. Please contact to Administrator.")
         if self.state != 'draft' and values and values.get('advance_expense_line_ids') and len(values['advance_expense_line_ids'][0] or [])>2 \
-                and 'product_id' in values['advance_expense_line_ids'][0][2].keys() and self.env.user.login not in ('director@isyedu.org','odooadmin@isyedu.org'):
+                and 'product_id' in values['advance_expense_line_ids'][0][2].keys() and self.env.user.login not in (self._get_director_mail(),'odooadmin@isyedu.org'):
             raise UserError("You cannot change Anticipated Account Code on this state. Please contact to Administrator.")
         res = super(EmployeeAdvanceExpense, self).write(values)
         for rec in self:
@@ -882,7 +888,7 @@ class EmployeeAdvanceExpense(models.Model):
     def get_first_approval(self):
         self._generate_name()
         if (self.first_approver_id and self.first_approver_id.id!=self.env.user.id):
-            if self.env.user.login not in ('odooadmin@isyedu.org', 'director@isyedu.org'):
+            if self.env.user.login not in ('odooadmin@isyedu.org', self._get_director_mail()):
                 raise UserError("%s is reviewer for this request. You are not allowed to approve this."%(self.first_approver_id.name))
 
         self.state = 'first_approve'

@@ -207,7 +207,7 @@
                 <xpath expr="//button[@name='get_apprv_hr_manager']" position="replace">
                     <!-- Approve Button -->
                     <button string="Approve" name="get_apprv_hr_manager"
-                        invisible="not (state == 'confirm' and created_by_director != False)"
+                        invisible="not (state == 'confirm' and created_by_director != False) and not (state == 'confirm' and checker_id == False and coo_final_approver != False)"
                         type="object" groups="mt_isy.group_adv_reimb_special_approver"  class="oe_highlight"/>
 
                     <button string="Approve" name="get_apprv_hr_manager"
@@ -218,9 +218,9 @@
                         invisible="state != 'first_approve'"
                         type="object" groups="mt_isy.group_adv_reimb_special_approver"  class="oe_highlight"/>
 
-                    <button string="Approve" name="get_apprv_hr_manager"
+                    <!-- <button string="Approve" name="get_apprv_hr_manager"
                         invisible="not (state == 'confirm' and checker_id == False and coo_final_approver != False)"
-                        type="object" groups="mt_isy.group_adv_reimb_special_approver"  class="oe_highlight"/>
+                        type="object" groups="mt_isy.group_adv_reimb_special_approver"  class="oe_highlight"/> -->
                 </xpath>
 
                 <xpath expr="//button[@name='action_sheet_move_advance']" position="replace">

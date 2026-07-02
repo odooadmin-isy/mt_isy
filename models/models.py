@@ -590,6 +590,9 @@ class EmployeeAdvanceExpense(models.Model):
 
     #Check if the amount is less than the allowed amount only need first approve
     def check_coo_final_approver(self):
+        if self.adv_exp_type == 'expense' or self.salary_advance:
+            return False
+
         amount_check = float(self.env['ir.config_parameter'].sudo().get_param(
             'isy.adv_reim_amount_check', 0.00))
         if amount_check > 0:

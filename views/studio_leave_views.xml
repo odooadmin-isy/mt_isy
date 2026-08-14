@@ -63,6 +63,7 @@
                 </button>
                 <button name='action_refuse' position='attributes'>
                     <attribute name='groups'>hr_holidays.group_hr_holidays_manager</attribute>
+                    <attribute name='invisible'>state in ["draft", "refuse","validate"]</attribute>
                 </button>
             </field>
         </record>
